@@ -1,8 +1,5 @@
-# .zprofile
-# raghavpoonia/dotfiles
-# Managed by chezmoi
-# Loaded once at login (not on every shell start)
-
-# ── Homebrew ──────────────────────────────────────────────────────────────────
-# ARM vs Intel path handled by chezmoi template
-{{ template "brew_path.tmpl" . }}
+{{- if eq .chezmoi.arch "arm64" }}
+eval "$(/opt/homebrew/bin/brew shellenv)"
+{{- else }}
+eval "$(/usr/local/bin/brew shellenv)"
+{{- end }}
