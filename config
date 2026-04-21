@@ -1,0 +1,36 @@
+# Ghostty config
+# raghavpoonia/dotfiles
+# Docs: https://ghostty.org/docs/config
+
+# ── Font ─────────────────────────────────────────────────────────────────────
+# JetBrainsMono Nerd Font recommended — gives Starship icons
+# Install: brew install --cask font-jetbrains-mono-nerd-font
+font-family = "JetBrainsMono Nerd Font"
+font-size = 14
+
+# ── Theme ─────────────────────────────────────────────────────────────────────
+theme = "catppuccin-mocha"
+
+# ── Window ────────────────────────────────────────────────────────────────────
+window-padding-x = 12
+window-padding-y = 12
+window-decoration = false     # borderless — cleaner on macOS
+
+# ── Cursor ────────────────────────────────────────────────────────────────────
+cursor-style = "block"
+cursor-style-blink = false
+
+# ── Shell ─────────────────────────────────────────────────────────────────────
+shell-integration = "zsh"
+
+# ── Performance ───────────────────────────────────────────────────────────────
+# Native Metal renderer on M-series — no config needed
+# These improve scrollback performance
+scrollback-limit = 10000
+
+# ── Keybinds ─────────────────────────────────────────────────────────────────
+# New tab with same working directory
+keybind = "cmd+t=new_tab"
+keybind = "cmd+w=close_surface"
+keybind = "cmd+shift+[=previous_tab"
+keybind = "cmd+shift+]=next_tab"

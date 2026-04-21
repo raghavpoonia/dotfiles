@@ -1,0 +1,94 @@
+# .zshrc
+# raghavpoonia/dotfiles
+# Managed by chezmoi — edit via: chezmoi edit ~/.zshrc
+
+# ── Oh My Zsh ────────────────────────────────────────────────────────────────
+export ZSH="$HOME/.oh-my-zsh"
+
+plugins=(
+  git
+  docker
+  kubectl
+  aws
+  terraform
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+  zsh-history-substring-search
+)
+
+source $ZSH/oh-my-zsh.sh
+
+# ── Starship prompt ──────────────────────────────────────────────────────────
+eval "$(starship init zsh)"
+
+# ── zoxide (smarter cd) ──────────────────────────────────────────────────────
+eval "$(zoxide init zsh)"
+
+# ── fnm (Node version manager) ──────────────────────────────────────────────
+eval "$(fnm env --use-on-cd)"
+
+# ── pyenv ────────────────────────────────────────────────────────────────────
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+# ── direnv ───────────────────────────────────────────────────────────────────
+eval "$(direnv hook zsh)"
+
+# ── fzf ──────────────────────────────────────────────────────────────────────
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+
+# ── History ───────────────────────────────────────────────────────────────────
+HISTSIZE=100000
+SAVEHIST=100000
+setopt inc_append_history   # write immediately, not on shell exit
+setopt share_history        # share across sessions
+setopt hist_ignore_all_dups # no duplicates
+setopt hist_ignore_space    # commands starting with space not saved
+setopt hist_reduce_blanks
+
+# ── Navigation ────────────────────────────────────────────────────────────────
+setopt auto_cd              # type directory name to cd into it
+setopt correct_all          # suggest corrections for typos
+
+# ── Aliases: core replacements ────────────────────────────────────────────────
+alias ls="eza --icons --long --git"
+alias ll="eza --icons --long --git --all"
+alias tree="eza --tree --icons"
+alias cat="bat --style=plain"
+
+# ── Aliases: navigation ───────────────────────────────────────────────────────
+alias ..="cd .."
+alias ...="cd ../.."
+alias cls="clear"
+
+# ── Aliases: git ─────────────────────────────────────────────────────────────
+alias gs="git status"
+alias ga="git add ."
+alias gc="git commit -m"
+alias gp="git push"
+alias gl="git log --oneline --graph --decorate --all"
+alias gd="git diff"
+
+# ── Aliases: Python ───────────────────────────────────────────────────────────
+alias py="python3"
+alias venv="python3 -m venv .venv && source .venv/bin/activate"
+alias activate="source .venv/bin/activate"
+
+# ── Aliases: Docker ───────────────────────────────────────────────────────────
+alias dps="docker ps --format 'table {{.ID}}\t{{.Names}}\t{{.Status}}'"
+alias dcu="docker compose up -d"
+alias dcd="docker compose down"
+
+# ── Aliases: Kubernetes ───────────────────────────────────────────────────────
+alias k="kubectl"
+alias kctx="kubectx"
+alias kns="kubens"
+alias kgp="kubectl get pods"
+alias kgs="kubectl get services"
+
+# ── Aliases: typo fixes ───────────────────────────────────────────────────────
+alias sl="ls"
+alias whcih="which"

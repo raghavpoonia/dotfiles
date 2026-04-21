@@ -1,0 +1,12 @@
+# .chezmoitemplates/brew_path.tmpl
+# Handles Homebrew prefix difference between ARM and Intel Macs
+# ARM (M1/M4):  /opt/homebrew
+# Intel:        /usr/local
+#
+# Used in dot_zprofile via: {{ template "brew_path.tmpl" . }}
+
+{{ if eq .chezmoi.arch "arm64" -}}
+eval "$(/opt/homebrew/bin/brew shellenv)"
+{{- else -}}
+eval "$(/usr/local/bin/brew shellenv)"
+{{- end }}

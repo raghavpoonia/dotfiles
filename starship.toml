@@ -1,0 +1,79 @@
+# starship.toml
+# raghavpoonia/dotfiles
+# Docs: https://starship.rs/config/
+
+# ── Prompt symbols ───────────────────────────────────────────────────────────
+[character]
+success_symbol = "[➜](bold green)"
+error_symbol = "[✗](bold red)"
+
+# ── Execution time (show if command took >500ms) ─────────────────────────────
+# Useful for spotting slow scripts and API calls
+[cmd_duration]
+min_time = 500
+format = "took [$duration]($style) "
+style = "bold yellow"
+
+# ── Time in prompt ───────────────────────────────────────────────────────────
+# Helps correlate terminal output with logs
+[time]
+disabled = false
+format = "[$time]($style) "
+time_format = "%H:%M:%S"
+style = "dimmed white"
+
+# ── Git ───────────────────────────────────────────────────────────────────────
+[git_branch]
+symbol = "🌱 "
+format = "on [$symbol$branch]($style) "
+style = "bold purple"
+
+[git_status]
+format = '([$all_status$ahead_behind]($style)) '
+style = "bold red"
+
+# ── Python ────────────────────────────────────────────────────────────────────
+# Only shows when a .py file or venv is detected in the directory
+[python]
+symbol = "🐍 "
+format = 'via [${symbol}${version}( \($virtualenv\))]($style) '
+style = "bold green"
+detect_extensions = ["py"]
+detect_files = ["requirements.txt", "pyproject.toml", "setup.py"]
+detect_folders = [".venv", "venv"]
+
+# ── Node ──────────────────────────────────────────────────────────────────────
+# Only shows when a JS/TS project is detected
+[nodejs]
+symbol = " "
+format = 'via [${symbol}${version}]($style) '
+style = "bold green"
+detect_extensions = ["js", "ts", "mjs"]
+detect_files = ["package.json", ".node-version", ".nvmrc"]
+
+# ── Go ────────────────────────────────────────────────────────────────────────
+[golang]
+symbol = "🐹 "
+format = 'via [${symbol}${version}]($style) '
+style = "bold cyan"
+detect_extensions = ["go"]
+detect_files = ["go.mod"]
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+[docker_context]
+format = 'via [🐳 $context]($style) '
+style = "blue bold"
+
+# ── Kubernetes ───────────────────────────────────────────────────────────────
+# Shows current kube context — important on multi-cluster setups
+[kubernetes]
+disabled = false
+symbol = "☁️ "
+format = '[$symbol$context( \($namespace\))]($style) '
+style = "bold blue"
+
+# ── AWS ───────────────────────────────────────────────────────────────────────
+[aws]
+format = 'on [$symbol$profile( \($region\))]($style) '
+style = "bold yellow"
+symbol = "☁️ "
