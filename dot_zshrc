@@ -53,6 +53,9 @@ setopt hist_reduce_blanks
 setopt auto_cd              # type directory name to cd into it
 setopt correct_all          # suggest corrections for typos
 
+# Smart cd hooks
+source ~/.config/zsh/smart-cd.zsh
+
 # ── Aliases: core replacements ────────────────────────────────────────────────
 alias ls="eza --icons --long --git"
 alias ll="eza --icons --long --git --all"
