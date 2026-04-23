@@ -49,15 +49,15 @@ _secret_unquote() {
 # Retrieve raw JSON blob from keychain
 _secret_blob() {
   local service="$1"
-  local tmp
-  tmp=$(mktemp /tmp/.secret-XXXXXX.json)
-  security find-generic-password -a "$USER" -s "$service" -w 2>/dev/null > "$tmp"
-  local blob
-  blob=$(cat "$tmp" 2>/dev/null)
-  rm -f "$tmp"
-  printf '%s' "$blob"
+  local raw
+  raw=$(security find-generic-password -a "$USER" -s "$service" -w 2>/dev/null)
+  # If hex encoded, decode it
+  if [[ "$raw" =~ ^[0-9a-f]+$ ]]; then
+    printf '%s' "$raw" | xxd -r -p
+  else
+    printf '%s' "$raw"
+  fi
 }
-
 
 # ── secret-set ────────────────────────────────────────────────────────────────
 # Prompts for VAR=value pairs. Empty line to finish.
