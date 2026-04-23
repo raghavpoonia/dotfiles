@@ -7,72 +7,85 @@
 #   source ~/.config/zsh/secret-helpers.zsh
 #
 # Commands:
-#   secret-set   PROJECT_NAME    — store all vars for a project interactively
-#   secret-load  PROJECT_NAME    — export all vars into current shell
-#   secret-get   PROJECT_NAME VAR_NAME — get a single var value
-#   secret-list  PROJECT_NAME    — list all var names (not values) for a project
-#   secret-edit  PROJECT_NAME    — open stored vars in $EDITOR for editing
-#   secret-delete PROJECT_NAME   — remove all vars for a project from keychain
+#   secret-set    PROJECT_NAME              — store vars interactively
+#   secret-load   PROJECT_NAME              — export all vars into current shell
+#   secret-get    PROJECT_NAME VAR_NAME     — get a single var value
+#   secret-list   PROJECT_NAME              — list all var names (not values)
+#   secret-edit   PROJECT_NAME              — edit vars in $EDITOR
+#   secret-delete PROJECT_NAME              — remove all vars for a project
 
 
-# ── Internal: keychain service name ──────────────────────────────────────────
-_secret_service() {
-  echo "dotfiles-secrets-$1"
+# ── Internal helpers ──────────────────────────────────────────────────────────
+_secret_service() { echo "dotfiles-secrets-$1" }
+
+_secret_read() {
+  # Read a line from the terminal directly — works inside zsh functions
+  local __var="$1"
+  local __prompt="$2"
+  echo -n "$__prompt" > /dev/tty
+  read -r "$__var" < /dev/tty
+}
+
+_secret_strip_quotes() {
+  # Strip surrounding single or double quotes from a value
+  local val="$1"
+  val="${val#\"}" ; val="${val%\"}"
+  val="${val#\'}" ; val="${val%\'}"
+  echo "$val"
 }
 
 
-# ── secret-set: store vars interactively ─────────────────────────────────────
+# ── secret-set ────────────────────────────────────────────────────────────────
 # Usage: secret-set myproject
-# Prompts for each var name and value, stores as JSON in keychain
-# To add to existing: secret-set myproject (adds/updates individual keys)
+# Prompts VAR_NAME="value" pairs one at a time, empty line to finish
+# Re-running adds/updates keys without wiping existing ones
 secret-set() {
   local project="${1:?Usage: secret-set PROJECT_NAME}"
   local service=$(_secret_service "$project")
 
-  # Load existing if any
-  local existing="{}"
-  existing=$(security find-generic-password -a "$USER" -s "$service" -w 2>/dev/null) || existing="{}"
+  # Load existing blob if any
+  local updated="{}"
+  updated=$(security find-generic-password -a "$USER" -s "$service" -w 2>/dev/null) || updated="{}"
 
-  echo "  Setting secrets for project: $project"
-  echo "  Enter VAR_NAME=value pairs. Empty line to finish."
+  echo "  Setting secrets for: $project"
+  echo "  Format: VAR_NAME=value or VAR_NAME=\"value\""
+  echo "  Empty line to finish."
   echo ""
 
-  local updated="$existing"
+  local pair key val
   while true; do
-    echo -n "  VAR_NAME=value (or press Enter to finish): "
-    read -r pair
+    _secret_read pair "  > "
     [[ -z "$pair" ]] && break
 
-    local key="${pair%%=*}"
-    local val="${pair#*=}"
+    # Split on first = only
+    key="${pair%%=*}"
+    val="${pair#*=}"
 
-    if [[ -z "$key" || -z "$val" ]]; then
-      echo "  ⚠️  Invalid format. Use VAR_NAME=value"
+    # Strip surrounding quotes from value
+    val=$(_secret_strip_quotes "$val")
+
+    if [[ -z "$key" || "$key" == "$pair" ]]; then
+      echo "  ⚠️  Use VAR_NAME=value format"
       continue
     fi
 
-    # Add/update key in JSON using jq
-    updated=$(echo "$updated" | jq --arg k "$key" --arg v "$val" '.[$k] = $v')
-    echo "  ✔ $key set"
+    updated=$(printf '%s' "$updated" | jq --arg k "$key" --arg v "$val" '.[$k] = $v')
+    echo "  ✔ $key"
   done
 
-  # Store updated JSON in keychain
-  # Delete existing entry first (keychain won't update in place)
+  # Save to keychain
   security delete-generic-password -a "$USER" -s "$service" 2>/dev/null
-  security add-generic-password \
-    -a "$USER" \
-    -s "$service" \
-    -w "$updated" \
-    -U
+  security add-generic-password -a "$USER" -s "$service" -w "$updated" -U 2>/dev/null
 
   echo ""
-  echo "  ✔ Secrets stored in keychain under: $service"
+  echo "  ✔ Saved to keychain: $service"
+  echo "  Run 'secret-list $project' to verify"
 }
 
 
-# ── secret-load: export all vars into current shell ──────────────────────────
+# ── secret-load ───────────────────────────────────────────────────────────────
 # Usage: secret-load myproject
-# Reads JSON blob from keychain, exports each key as env var
+# Exports all vars into the current shell session
 secret-load() {
   local project="${1:?Usage: secret-load PROJECT_NAME}"
   local service=$(_secret_service "$project")
@@ -81,25 +94,23 @@ secret-load() {
   blob=$(security find-generic-password -a "$USER" -s "$service" -w 2>/dev/null)
 
   if [[ -z "$blob" ]]; then
-    echo "  ⚠️  No secrets found for project: $project"
+    echo "  ⚠️  No secrets found for: $project"
     echo "  Run: secret-set $project"
     return 1
   fi
 
-  # Export each key-value pair
   local count=0
   while IFS='=' read -r key val; do
-    export "$key"="$val"
+    export "${key}"="${val}"
     (( count++ ))
-  done < <(echo "$blob" | jq -r 'to_entries[] | "\(.key)=\(.value)"')
+  done < <(printf '%s' "$blob" | jq -r 'to_entries[] | "\(.key)=\(.value)"')
 
-  echo "  🔑 $count secrets loaded for: $project"
+  echo "  🔑 $count vars loaded for: $project"
 }
 
 
-# ── secret-get: retrieve a single var ────────────────────────────────────────
+# ── secret-get ────────────────────────────────────────────────────────────────
 # Usage: secret-get myproject VAR_NAME
-# Prints the value (useful for scripting)
 secret-get() {
   local project="${1:?Usage: secret-get PROJECT_NAME VAR_NAME}"
   local varname="${2:?Usage: secret-get PROJECT_NAME VAR_NAME}"
@@ -108,17 +119,15 @@ secret-get() {
   local blob
   blob=$(security find-generic-password -a "$USER" -s "$service" -w 2>/dev/null)
 
-  if [[ -z "$blob" ]]; then
-    echo "  ⚠️  No secrets found for project: $project" >&2
-    return 1
-  fi
+  [[ -z "$blob" ]] && { echo "  ⚠️  No secrets for: $project" >&2; return 1 }
 
-  echo "$blob" | jq -r --arg k "$varname" '.[$k] // empty'
+  printf '%s' "$blob" | jq -r --arg k "$varname" '.[$k] // empty'
 }
 
 
-# ── secret-list: show var names only, never values ───────────────────────────
+# ── secret-list ───────────────────────────────────────────────────────────────
 # Usage: secret-list myproject
+# Shows var names only — never values
 secret-list() {
   local project="${1:?Usage: secret-list PROJECT_NAME}"
   local service=$(_secret_service "$project")
@@ -127,38 +136,41 @@ secret-list() {
   blob=$(security find-generic-password -a "$USER" -s "$service" -w 2>/dev/null)
 
   if [[ -z "$blob" ]]; then
-    echo "  ⚠️  No secrets found for project: $project"
+    echo "  ⚠️  No secrets found for: $project"
     return 1
   fi
 
-  echo "  Secrets for: $project"
+  local count
+  count=$(printf '%s' "$blob" | jq 'length')
+  echo "  $count secrets for: $project"
   echo ""
-  echo "$blob" | jq -r 'keys[]' | while read -r key; do
+  printf '%s' "$blob" | jq -r 'keys[]' | while read -r key; do
     echo "    $key"
   done
 }
 
 
-# ── secret-edit: edit vars in $EDITOR ────────────────────────────────────────
+# ── secret-edit ───────────────────────────────────────────────────────────────
 # Usage: secret-edit myproject
-# Opens current JSON in editor, saves back to keychain on exit
-# WARNING: briefly writes to /tmp — never on a shared machine
+# Opens JSON in $EDITOR, saves back to keychain on exit
+# Temp file lives in /tmp briefly — clean personal machine only
 secret-edit() {
   local project="${1:?Usage: secret-edit PROJECT_NAME}"
   local service=$(_secret_service "$project")
 
-  local blob
+  local blob="{}"
   blob=$(security find-generic-password -a "$USER" -s "$service" -w 2>/dev/null) || blob="{}"
 
   local tmpfile
   tmpfile=$(mktemp /tmp/secrets-XXXXXX.json)
-  echo "$blob" | jq '.' > "$tmpfile"
+  printf '%s' "$blob" | jq '.' > "$tmpfile"
 
-  "${EDITOR:-nvim}" "$tmpfile"
+  # Open editor bound to terminal
+  ${EDITOR:-nvim} "$tmpfile" < /dev/tty > /dev/tty 2>&1
 
-  # Validate JSON before saving
+  # Validate JSON
   if ! jq '.' "$tmpfile" &>/dev/null; then
-    echo "  ❌ Invalid JSON — changes not saved"
+    echo "  ❌ Invalid JSON — not saved"
     rm -f "$tmpfile"
     return 1
   fi
@@ -168,27 +180,23 @@ secret-edit() {
   rm -f "$tmpfile"
 
   security delete-generic-password -a "$USER" -s "$service" 2>/dev/null
-  security add-generic-password \
-    -a "$USER" \
-    -s "$service" \
-    -w "$updated" \
-    -U
+  security add-generic-password -a "$USER" -s "$service" -w "$updated" -U 2>/dev/null
 
   echo "  ✔ Secrets updated for: $project"
 }
 
 
-# ── secret-delete: remove all vars for a project ─────────────────────────────
+# ── secret-delete ─────────────────────────────────────────────────────────────
 # Usage: secret-delete myproject
 secret-delete() {
   local project="${1:?Usage: secret-delete PROJECT_NAME}"
   local service=$(_secret_service "$project")
 
-  echo -n "  Delete ALL secrets for '$project'? This cannot be undone. [y/N] "
-  read -r answer
+  local answer
+  _secret_read answer "  Delete ALL secrets for '$project'? [y/N] "
   if [[ "$answer" =~ ^[Yy]$ ]]; then
     security delete-generic-password -a "$USER" -s "$service" 2>/dev/null
-    echo "  ✔ Deleted secrets for: $project"
+    echo "  ✔ Deleted: $project"
   else
     echo "  Cancelled"
   fi
