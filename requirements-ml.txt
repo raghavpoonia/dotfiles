@@ -1,0 +1,72 @@
+# requirements-ml.txt
+# raghavpoonia/dotfiles
+#
+# AI/ML Python dependencies
+# Install via: pip install -r requirements-ml.txt
+# Or via:      bash bootstrap.sh --ml
+#
+# When do you need this?
+#   - Training or fine-tuning ML models
+#   - Running LLM inference locally
+#   - Working with transformers, embeddings, or vector stores
+#   - Running or converting Jupyter notebooks
+#   - Building AI security tools (model scanning, prompt injection detection)
+#
+# When you DON'T need this?
+#   - General Python scripting
+#   - Security tooling without ML components
+#   - Web development
+#   - DevSecOps automation
+#
+# GPU notes:
+#   M-series Mac  torch uses Metal/MPS automatically — no extra config
+#   Intel Mac     CPU only — torch works but training is slow
+#   Check: python3 -c "import torch; print(torch.backends.mps.is_available())"
+
+
+# ── Core data science ─────────────────────────────────────────────────────────
+numpy
+pandas
+scikit-learn
+matplotlib
+seaborn
+scipy
+
+# ── Deep learning ─────────────────────────────────────────────────────────────
+# torch — Metal/MPS on M-series, CPU on Intel (same package, auto-detects)
+torch
+torchvision
+torchaudio
+
+# ── Transformers + LLM ───────────────────────────────────────────────────────
+transformers
+datasets
+tokenizers
+accelerate          # distributed training, MPS optimisation
+sentencepiece       # tokeniser for many models
+einops              # tensor operations used by many model architectures
+
+# ── LLM clients + agents ─────────────────────────────────────────────────────
+openai
+anthropic
+langchain
+langchain-community
+
+# ── Data storage ─────────────────────────────────────────────────────────────
+duckdb              # already used in CISO platform
+faiss-cpu           # vector similarity search (use faiss-gpu if CUDA available)
+chromadb            # vector store for RAG pipelines
+
+# ── Notebooks ────────────────────────────────────────────────────────────────
+jupyter
+jupyterlab
+jupytext            # converts notebooks to .py — git-friendly, no blob noise
+nbformat
+
+# ── Dev tooling ──────────────────────────────────────────────────────────────
+black               # formatter
+ruff                # linter (replaces flake8, isort, pyflakes)
+mypy                # type checker
+ipython             # better REPL
+rich                # pretty terminal output
+python-dotenv       # .env file loading
