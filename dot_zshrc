@@ -53,9 +53,6 @@ setopt hist_reduce_blanks
 setopt auto_cd              # type directory name to cd into it
 setopt correct_all          # suggest corrections for typos
 
-# Smart cd hooks
-source ~/.config/zsh/smart-cd.zsh
-
 # ── Aliases: core replacements ────────────────────────────────────────────────
 alias ls="eza --icons --long --git"
 alias ll="eza --icons --long --git --all"
@@ -91,6 +88,10 @@ alias kctx="kubectx"
 alias kns="kubens"
 alias kgp="kubectl get pods"
 alias kgs="kubectl get services"
+
+# ── Aliases: file viewing ─────────────────────────────────────────────────────
+alias md="glow"           # render markdown: md README.md
+alias preview="bat"       # syntax highlighted view
 
 # ── Aliases: typo fixes ───────────────────────────────────────────────────────
 alias sl="ls"
