@@ -16,7 +16,7 @@ set -euo pipefail
 ARCH=$(uname -m)
 INSTALL_ML=false
 
-# ── Flags ────────────────────────────────────────────────────────────────────
+# ── Flags ─────────────────────────────────────────────────────────────────────
 for arg in "$@"; do
   case $arg in
     --ml)   INSTALL_ML=true ;;
@@ -29,7 +29,7 @@ for arg in "$@"; do
       echo "    bash bootstrap.sh --ml      core + AI/ML tools"
       echo ""
       echo "  Core installs:"
-      echo "    CLI tools   eza, bat, ripgrep, fd, fzf, zoxide, tldr"
+      echo "    CLI tools   eza, bat, ripgrep, fd, fzf, zoxide, tldr, glow"
       echo "    Data        jq, yq, direnv, wget, curl"
       echo "    Shell       starship, zsh plugins"
       echo "    Editor      neovim (LazyVim)"
@@ -44,14 +44,13 @@ for arg in "$@"; do
       echo "    Jupyter     jupyterlab, jupytext"
       echo ""
       echo "  When to use --ml:"
-      echo "    You are doing ML model training, LLM work, transformer"
-      echo "    research, or running Jupyter notebooks. Not needed for"
-      echo "    general Python scripting or security tooling."
+      echo "    ML model training, LLM work, transformer research,"
+      echo "    Jupyter notebooks, AI security tooling."
+      echo "    Not needed for general Python or security tooling."
       echo ""
       echo "  GPU notes:"
-      echo "    M-series Mac  Metal/MPS available — torch uses Apple GPU"
+      echo "    M-series Mac  Metal/MPS — torch uses Apple GPU automatically"
       echo "    Intel Mac     CPU only — no CUDA, no MPS"
-      echo "    Check after install: python3 -c 'import torch; print(torch.backends.mps.is_available())'"
       echo ""
       exit 0
       ;;
@@ -73,7 +72,8 @@ brew install \
   fd \
   fzf \
   zoxide \
-  tldr
+  tldr \
+  glow
 
 # ── Data + automation ─────────────────────────────────────────────────────────
 echo "==> Data tools..."
@@ -129,43 +129,28 @@ echo "==> fzf shell keybindings..."
 if [ "$INSTALL_ML" = true ]; then
   echo ""
   echo "==> AI/ML system dependencies..."
+  brew install cmake libomp portaudio
 
-  brew install cmake
-
-  # libomp — OpenMP for parallel ML ops
-  # Intel: needed for scikit-learn, xgboost
-  # ARM: brew installs but links differently — handled automatically
-  brew install libomp
-
-  # portaudio — needed for audio model work (whisper, speech models)
-  brew install portaudio
-
-  echo "==> Jupyter + notebook tools..."
+  echo "==> Jupyter..."
   brew install jupyterlab
 
   echo "==> Python ML packages..."
-  # Requires pyenv Python to be active
-  # Run: pyenv install 3.12.0 && pyenv global 3.12.0 first
   if command -v pip3 &>/dev/null; then
-    REQS="$(brew --prefix)/share/raghavpoonia-dotfiles/requirements-ml.txt"
     REQS_LOCAL="$(dirname "$0")/requirements-ml.txt"
-
     if [ -f "$REQS_LOCAL" ]; then
       echo "==> Installing from requirements-ml.txt..."
       pip3 install -r "$REQS_LOCAL"
     else
-      echo "==> Installing core ML packages directly..."
       pip3 install \
-        numpy pandas scikit-learn matplotlib seaborn \
+        numpy pandas scikit-learn matplotlib seaborn scipy \
         torch torchvision torchaudio \
-        transformers datasets tokenizers \
-        langchain openai anthropic \
-        duckdb \
-        jupytext \
-        black ruff mypy ipython
+        transformers datasets tokenizers accelerate sentencepiece einops \
+        langchain langchain-community openai anthropic \
+        duckdb faiss-cpu chromadb \
+        jupyter jupytext nbformat \
+        black ruff mypy ipython rich python-dotenv
     fi
 
-    # GPU availability check
     echo ""
     echo "==> Checking GPU availability..."
     python3 -c "
@@ -173,12 +158,11 @@ import torch
 mps = torch.backends.mps.is_available()
 print(f'  Metal/MPS (Apple Silicon): {mps}')
 if not mps:
-    print('  Intel Mac detected — CPU training only')
-    print('  No CUDA, no MPS available on this machine')
-" 2>/dev/null || echo "  torch not yet importable — restart shell and retry"
+    print('  Intel Mac — CPU training only')
+" 2>/dev/null || echo "  torch not importable yet — restart shell and retry"
 
   else
-    echo "  ⚠️  pip3 not found — set up pyenv Python first then re-run with --ml"
+    echo "  ⚠️  pip3 not found — set up pyenv Python first"
     echo "  Run: pyenv install 3.12.0 && pyenv global 3.12.0"
     echo "  Then: bash bootstrap.sh --ml"
   fi
@@ -198,5 +182,10 @@ echo "  5. brew install --cask ghostty"
 echo "  6. brew install --cask font-jetbrains-mono-nerd-font"
 if [ "$INSTALL_ML" = false ]; then
   echo ""
-  echo "  For AI/ML work run: bash bootstrap.sh --ml"
+  echo "  For AI/ML work: bash bootstrap.sh --ml"
 fi
+echo ""
+echo "  Quick file viewing:"
+echo "    bat file.py          syntax highlighted"
+echo "    glow README.md       rendered markdown"
+echo "    nvim .               open project in neovim"
