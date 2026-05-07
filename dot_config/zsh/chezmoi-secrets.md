@@ -1,7 +1,7 @@
 # chezmoi-secrets.md
 # Setting up chezmoi encrypted secrets with age
 # For vars that need to follow you across machines
-# raghavpoonia/dotfiles
+# ruwgxo/dotfiles
 
 
 ## When to use this vs Keychain

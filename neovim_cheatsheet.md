@@ -1,5 +1,5 @@
 # Neovim Cheatsheet
-# raghavpoonia/dotfiles — LazyVim
+# ruwgxo/dotfiles — LazyVim
  
 Space is the leader key. Press Space and wait — which-key shows all options.
  

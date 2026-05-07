@@ -107,7 +107,7 @@ git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM
  
 ```sh
 brew install chezmoi
-chezmoi init --apply raghavpoonia
+chezmoi init --apply ruwgxo
 chezmoi apply ~/.zshrc
 source ~/.zshrc
 ```
