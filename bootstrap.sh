@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # bootstrap.sh
-# raghavpoonia/dotfiles
+# ruwgxo/dotfiles
 # Safe to re-run — brew skips already-installed packages
 #
 # Usage:
@@ -18,7 +18,7 @@ for arg in "$@"; do
     --ml) INSTALL_ML=true ;;
     --help)
       echo ""
-      echo "  bootstrap.sh — raghavpoonia/dotfiles"
+      echo "  bootstrap.sh — ruwgxo/dotfiles"
       echo ""
       echo "  Usage:"
       echo "    bash bootstrap.sh           core setup only"
@@ -48,7 +48,7 @@ for arg in "$@"; do
 done
 
 echo ""
-echo "  raghavpoonia/dotfiles bootstrap"
+echo "  ruwgxo/dotfiles bootstrap"
 echo "  arch : $ARCH"
 echo "  ml   : $INSTALL_ML"
 echo ""

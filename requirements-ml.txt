@@ -1,5 +1,5 @@
 # requirements-ml.txt
-# raghavpoonia/dotfiles
+# ruwgxo/dotfiles
 #
 # AI/ML Python dependencies
 # Install via: pip install -r requirements-ml.txt
